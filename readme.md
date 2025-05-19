@@ -83,7 +83,8 @@ Just like [Storybook](https://storybook.js.org/) does for frontend React/Vue/Sve
 
 ## 🛣️ Roadmap
 
-* [x] Register & render simple Bubble Tea models
+* [ ] Create interface to .Add Datastructures which will Contain the actual component and the knobs and how to put which knob to which param
+* [ ] Register & render simple Bubble Tea models
 * [ ] Add dynamic props via "knobs" (e.g., labels, booleans, enums)
 * [ ] Live reload on source file change
 * [ ] Integration with popular Go build tools

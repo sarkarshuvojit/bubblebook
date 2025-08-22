@@ -1,25 +1,68 @@
 package main
 
 import (
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/rivo/tview"
 )
 
-// model is a minimal Bubble Tea model that simply renders
-// a static loading message.
-type model struct{}
+// model shows a simple ASCII spinner before rendering a loading message.
+type model struct {
+	frames []string
+	frame  int
+	done   bool
+}
 
-func (m model) Init() tea.Cmd { return nil }
+func newModel() model {
+	return model{frames: []string{"|", "/", "-", "\\"}}
+}
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
+type tickMsg struct{}
 
-func (m model) View() string { return "Loading..." }
+func tick() tea.Cmd {
+	return tea.Tick(time.Millisecond*100, func(time.Time) tea.Msg { return tickMsg{} })
+}
+
+func (m model) Init() tea.Cmd {
+	return tick()
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg.(type) {
+	case tickMsg:
+		if m.frame >= len(m.frames)*8 {
+			m.done = true
+			return m, tea.Quit
+		}
+		m.frame++
+		return m, tick()
+	}
+	return m, nil
+}
+
+func (m model) View() string {
+	if m.done {
+		return "Loading..."
+	}
+	return m.frames[m.frame%len(m.frames)]
+}
+
+type tviewWriter struct {
+	app *tview.Application
+	tv  *tview.TextView
+}
+
+func (w tviewWriter) Write(p []byte) (int, error) {
+	s := string(p)
+	w.app.QueueUpdateDraw(func() {
+		w.tv.SetText(s)
+	})
+	return len(p), nil
+}
 
 func main() {
 	app := tview.NewApplication()
-
-	// Instantiate the Bubble Tea model and obtain its view.
-	loadingView := model{}.View()
 
 	// Create a grid with 2 rows and 2 columns.
 	// The left column and bottom row have fixed sizes similar to the diagram.
@@ -29,13 +72,19 @@ func main() {
 		SetBorders(true)   // Draw borders between cells
 
 	left := tview.NewBox()
-	// Display the Bubble Tea model's view in a TextView on the right side.
-	mainArea := tview.NewTextView().SetText(loadingView)
+	mainArea := tview.NewTextView()
 	bottom := tview.NewBox()
 
 	grid.AddItem(left, 0, 0, 1, 1, 0, 0, false)
 	grid.AddItem(mainArea, 0, 1, 1, 1, 0, 0, true)
 	grid.AddItem(bottom, 1, 0, 1, 2, 0, 0, false)
+
+	go func() {
+		w := tviewWriter{app: app, tv: mainArea}
+		if _, err := tea.NewProgram(newModel(), tea.WithOutput(w)).Run(); err != nil {
+			panic(err)
+		}
+	}()
 
 	if err := app.SetRoot(grid, true).Run(); err != nil {
 		panic(err)

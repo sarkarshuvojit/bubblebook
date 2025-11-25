@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/sarkarshuvojit/bubblebook/bubblebook"
+
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/rivo/tview"
 )
 
 // model shows a simple ASCII spinner before rendering a loading message.
@@ -48,45 +50,83 @@ func (m model) View() string {
 	return m.frames[m.frame%len(m.frames)]
 }
 
-type tviewWriter struct {
-	app *tview.Application
-	tv  *tview.TextView
-}
-
-func (w tviewWriter) Write(p []byte) (int, error) {
-	s := string(p)
-	w.app.QueueUpdateDraw(func() {
-		w.tv.SetText(s)
-	})
-	return len(p), nil
-}
-
 func main() {
-	app := tview.NewApplication()
+	bubblebook.Register("Spinner", func() tea.Model {
+		return newModel()
+	})
 
-	// Create a grid with 2 rows and 2 columns.
-	// The left column and bottom row have fixed sizes similar to the diagram.
-	grid := tview.NewGrid().
-		SetRows(0, 3).     // Bottom bar height 3
-		SetColumns(20, 0). // Left panel width 20
-		SetBorders(true)   // Draw borders between cells
+	bubblebook.Register("Counter", func() tea.Model {
+		return newCounterModel()
+	})
 
-	left := tview.NewBox()
-	mainArea := tview.NewTextView()
-	bottom := tview.NewBox()
+	bubblebook.Register("Toggle", func() tea.Model {
+		return newToggleModel()
+	})
 
-	grid.AddItem(left, 0, 0, 1, 1, 0, 0, false)
-	grid.AddItem(mainArea, 0, 1, 1, 1, 0, 0, true)
-	grid.AddItem(bottom, 1, 0, 1, 2, 0, 0, false)
-
-	go func() {
-		w := tviewWriter{app: app, tv: mainArea}
-		if _, err := tea.NewProgram(newModel(), tea.WithOutput(w)).Run(); err != nil {
-			panic(err)
-		}
-	}()
-
-	if err := app.SetRoot(grid, true).Run(); err != nil {
-		panic(err)
-	}
+	bubblebook.Start()
 }
+
+// --- Counter Component ---
+
+type counterModel struct {
+	count int
+}
+
+func newCounterModel() counterModel {
+	return counterModel{}
+}
+
+func (m counterModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m counterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "+", "k", "up":
+			m.count++
+		case "-", "j", "down":
+			m.count--
+		}
+	}
+	return m, nil
+}
+
+func (m counterModel) View() string {
+	return "Count: " + fmt.Sprintf("%d", m.count) + "\n\n(Press '+' or 'k' to increment, '-' or 'j' to decrement)"
+}
+
+// --- Toggle Component ---
+
+type toggleModel struct {
+	checked bool
+}
+
+func newToggleModel() toggleModel {
+	return toggleModel{}
+}
+
+func (m toggleModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m toggleModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case " ", "enter":
+			m.checked = !m.checked
+		}
+	}
+	return m, nil
+}
+
+func (m toggleModel) View() string {
+	checkbox := "[ ]"
+	if m.checked {
+		checkbox = "[*]"
+	}
+	return "Toggle: " + checkbox + "\n\n(Press space or enter to toggle)"
+}
+

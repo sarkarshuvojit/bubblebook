@@ -1,3 +1,6 @@
 # Binaries
 bubblebook
 !bubblebook/
+examples/*/basic
+examples/basic/basic
+

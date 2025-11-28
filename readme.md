@@ -11,7 +11,7 @@ bubblebook provides an interactive terminal UI for developing, testing, and show
 ## Installation
 
 ```bash
-go get github.com/sarkarshuvojit/bubblebook/pkg/bubblebook
+go get github.com/sarkarshuvojit/bubblebook
 ```
 
 ## Quick Start

@@ -2,6 +2,8 @@
 
 A Storybook-inspired development tool for building and testing Bubble Tea components in isolation.
 
+[![asciicast](https://asciinema.org/a/758789.svg)](https://asciinema.org/a/758789)
+
 ## Overview
 
 bubblebook provides an interactive terminal UI for developing, testing, and showcasing individual Bubble Tea components without integrating them into a full application. Register your components, preview them in real-time, and iterate quickly with built-in keyboard navigation and focus management.

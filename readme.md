@@ -1,120 +1,171 @@
-# 🧋 bubblebook
+# bubblebook
 
-> A Storybook-inspired TUI for building and visually testing Bubble Tea components
+A Storybook-inspired development tool for building and testing Bubble Tea components in isolation.
 
-**bubblebook** is a development tool for Go developers using the [Bubble Tea](https://github.com/charmbracelet/bubbletea) framework. It provides an interactive terminal-based UI where individual components can be rendered and tested in isolation. This allows for rapid iteration, visual debugging, and easy sharing of component behavior without needing to integrate them into a full application first.
+## Overview
 
----
+bubblebook provides an interactive terminal UI for developing, testing, and showcasing individual Bubble Tea components without integrating them into a full application. Register your components, preview them in real-time, and iterate quickly with built-in keyboard navigation and focus management.
 
-## ✨ Features
-
-* 📦 **Component isolation** – Run and inspect individual Bubble Tea components
-* 🎨 **Pure Bubbletea** – Built entirely with Bubbletea, no framework mixing
-* 🌈 **Full styling support** – Components render with all colors, styles, and ANSI sequences
-* 🎛️ **Interactive preview** – Navigate between components and interact with them in real-time
-* ⌨️ **Keyboard navigation** – Vim-style navigation (j/k) and intuitive keyboard shortcuts
-* ❓ **Built-in help** – Press `?` to see all keyboard shortcuts
-* 🖼️ **Live preview** – View component output as you develop
-* 🚀 **Zero-config** – Plug and play with minimal setup
-* 🧪 **Visual testing** – Great for building a visual testing pipeline for TUIs
-
----
-
-## 📸 Preview
-
-*(Coming soon – once the core is implemented)*
-
----
-
-## 🔧 Getting Started
+## Installation
 
 ```bash
-go install github.com/sarkarshuvojit/bubblebook@latest
+go get github.com/sarkarshuvojit/bubblebook/pkg/bubblebook
 ```
 
-Then, in your project:
-
-```bash
-bubblebook
-```
-
-This will automatically discover your exported Bubble Tea components (more details on structure below) and launch the interface.
-
-### Keyboard Shortcuts
-
-* **↑/k, ↓/j** – Navigate component list
-* **g, G** – Jump to top/bottom
-* **tab** – Switch between list and preview
-* **esc** – Return to component list
-* **?** – Toggle help screen
-* **q, ctrl+c** – Quit
-
----
-
-## 🧱 Project Structure
-
-bubblebook expects you to export your components with a consistent interface. Example:
+## Quick Start
 
 ```go
-// components/button.go
-package components
-
-func NewButton(label string) tea.Model {
-    return button{label: label}
-}
-```
-
-You can register components like so:
-
-```go
-// bubblebook/components.go
 package main
 
 import (
-    "github.com/yourusername/yourapp/components"
-    "github.com/yourusername/bubblebook"
+    "github.com/sarkarshuvojit/bubblebook/pkg/bubblebook"
+    tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+    // Register your components
     bubblebook.Register("Button", func() tea.Model {
-        return components.NewButton("Click me")
+        return NewButtonModel()
     })
 
+    bubblebook.Register("Input", func() tea.Model {
+        return NewInputModel()
+    })
+
+    // Launch the interactive TUI
     bubblebook.Start()
 }
 ```
 
-*(More auto-discovery / reflection support planned)*
+## Usage
 
----
+### Registering Components
 
-## 📚 Why "bubblebook"?
+Use `bubblebook.Register()` to add components to the registry. Each component needs a name and a factory function that returns a `tea.Model`:
 
-Just like [Storybook](https://storybook.js.org/) does for frontend React/Vue/Svelte components, **bubblebook** helps you isolate and interactively develop **Bubble Tea** TUI components.
+```go
+bubblebook.Register("ComponentName", func() tea.Model {
+    return yourComponent{}
+})
+```
 
----
+The factory function allows you to:
+- Initialize components with specific props
+- Set up initial state
+- Configure component variants
 
-## 🛣️ Roadmap
+Example with configuration:
 
-* [x] Register & render simple Bubble Tea models
-* [x] Pure Bubbletea implementation (no framework mixing)
-* [x] Keyboard navigation and focus management
-* [x] Built-in help screen
-* [ ] Create interface to add datastructures which will contain the actual component and the knobs
-* [ ] Add dynamic props via "knobs" (e.g., labels, booleans, enums)
-* [ ] Live reload on source file change
-* [ ] Integration with popular Go build tools
-* [ ] Theming support
-* [ ] Export visual snapshots for documentation/testing
+```go
+bubblebook.Register("Primary Button", func() tea.Model {
+    return NewButton("Click me", PrimaryStyle)
+})
 
----
+bubblebook.Register("Secondary Button", func() tea.Model {
+    return NewButton("Cancel", SecondaryStyle)
+})
+```
 
-## 🤝 Contributing
+### Starting the TUI
 
-PRs and ideas welcome! If you're a Bubble Tea enthusiast or terminal UI nerd, come help build the best TUI dev toolchain.
+After registering your components, launch the bubblebook interface:
 
----
+```go
+bubblebook.Start()
+```
 
-## 📄 License
+This opens a terminal UI where you can:
+- Browse all registered components
+- Preview components in isolation
+- Interact with components in real-time
+- Test component behavior and rendering
 
-MIT © 2025 \[Shuvojit Sarkar]
+### Keyboard Controls
+
+- `↑/k`, `↓/j` - Navigate component list
+- `g`, `G` - Jump to top/bottom
+- `tab` - Switch between list and preview
+- `esc` - Return to component list
+- `?` - Toggle help screen
+- `q`, `ctrl+c` - Quit
+
+## API Reference
+
+### Functions
+
+#### `Register(name string, factory ComponentFactory)`
+
+Adds a component to the bubblebook registry.
+
+**Parameters:**
+- `name` - Display name for the component
+- `factory` - Function that returns a new instance of `tea.Model`
+
+#### `Start()`
+
+Launches the bubblebook TUI with all registered components.
+
+### Types
+
+#### `ComponentFactory`
+
+```go
+type ComponentFactory func() tea.Model
+```
+
+A function that returns a fresh instance of a Bubble Tea model.
+
+## Examples
+
+See the [`examples/`](./examples) directory for complete working examples:
+
+- [`examples/basic`](./examples/basic) - Basic usage with spinner, counter, and toggle components
+- [`examples/charm-components`](./examples/charm-components) - Examples using Charm libraries
+
+To run an example:
+
+```bash
+cd examples/basic
+go run main.go
+```
+
+## Features
+
+- Component isolation - Run and inspect individual Bubble Tea components
+- Pure Bubbletea - Built entirely with Bubbletea, no framework mixing
+- Full styling support - Components render with all colors, styles, and ANSI sequences
+- Interactive preview - Navigate between components and interact with them in real-time
+- Keyboard navigation - Vim-style navigation and intuitive keyboard shortcuts
+- Built-in help - Press `?` to see all keyboard shortcuts
+- Zero-config - Plug and play with minimal setup
+
+## Use Cases
+
+- **Component Development** - Build and test components in isolation before integration
+- **Visual Testing** - Create a visual testing pipeline for TUI components
+- **Documentation** - Showcase component variants and states
+- **Debugging** - Isolate and debug component behavior
+- **Prototyping** - Quickly prototype and iterate on UI elements
+
+## Comparison to Storybook
+
+Just like [Storybook](https://storybook.js.org/) helps frontend developers build and test React/Vue/Svelte components in isolation, bubblebook provides the same workflow for Bubble Tea TUI applications.
+
+## Roadmap
+
+- [x] Register and render Bubble Tea models
+- [x] Pure Bubbletea implementation
+- [x] Keyboard navigation and focus management
+- [x] Built-in help screen
+- [ ] Dynamic props via "knobs" (labels, booleans, enums)
+- [ ] Live reload on source file change
+- [ ] Theming support
+- [ ] Export visual snapshots for documentation/testing
+
+## Contributing
+
+Contributions are welcome. Please open an issue or pull request on GitHub.
+
+## License
+
+MIT © 2025 Shuvojit Sarkar

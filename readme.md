@@ -25,13 +25,20 @@ import (
 )
 
 func main() {
-    // Register your components
-    bubblebook.Register("Button", func() tea.Model {
-        return NewButtonModel()
+    // Register components individually
+    bubblebook.Register("Welcome", func() tea.Model {
+        return NewWelcomeModel()
     })
 
-    bubblebook.Register("Input", func() tea.Model {
-        return NewInputModel()
+    // Or organize them in groups
+    bubblebook.Group("Form Components", func() {
+        bubblebook.Register("Button", func() tea.Model {
+            return NewButtonModel()
+        })
+
+        bubblebook.Register("Input", func() tea.Model {
+            return NewInputModel()
+        })
     })
 
     // Launch the interactive TUI
@@ -68,6 +75,67 @@ bubblebook.Register("Secondary Button", func() tea.Model {
 })
 ```
 
+### Organizing Components with Groups
+
+Use `bubblebook.Group()` to organize related components into collapsible folders. This is especially useful for large component libraries:
+
+```go
+func main() {
+    // Root-level component (ungrouped)
+    bubblebook.Register("Welcome", func() tea.Model {
+        return NewWelcomeModel()
+    })
+
+    // Group related components together
+    bubblebook.Group("Form Components", func() {
+        bubblebook.Register("Text Input", func() tea.Model {
+            return NewTextInputModel()
+        })
+
+        bubblebook.Register("Button", func() tea.Model {
+            return NewButtonModel()
+        })
+
+        bubblebook.Register("Checkbox", func() tea.Model {
+            return NewCheckboxModel()
+        })
+    })
+
+    // Groups can be nested
+    bubblebook.Group("Feedback", func() {
+        bubblebook.Group("Progress", func() {
+            bubblebook.Register("Progress Bar", func() tea.Model {
+                return NewProgressModel()
+            })
+        })
+
+        bubblebook.Group("Loading", func() {
+            bubblebook.Register("Spinner", func() tea.Model {
+                return NewSpinnerModel()
+            })
+        })
+    })
+
+    bubblebook.Start()
+}
+```
+
+Groups appear as collapsible folders in the UI:
+```
+Components
+
+  • Welcome
+▶ 📂 Form Components
+    • Text Input
+    • Button
+    • Checkbox
+  📂 Feedback
+    📂 Progress
+      • Progress Bar
+    📂 Loading
+      • Spinner
+```
+
 ### Starting the TUI
 
 After registering your components, launch the bubblebook interface:
@@ -84,10 +152,17 @@ This opens a terminal UI where you can:
 
 ### Keyboard Controls
 
+**Navigation:**
 - `↑/k`, `↓/j` - Navigate component list
 - `g`, `G` - Jump to top/bottom
+- `→/l/enter` - Expand folder or select component
+- `←/h` - Collapse folder or jump to parent
+
+**Focus:**
 - `tab` - Switch between list and preview
 - `esc` - Return to component list
+
+**General:**
 - `?` - Toggle help screen
 - `q`, `ctrl+c` - Quit
 
@@ -103,9 +178,38 @@ Adds a component to the bubblebook registry.
 - `name` - Display name for the component
 - `factory` - Function that returns a new instance of `tea.Model`
 
+**Example:**
+```go
+bubblebook.Register("Button", func() tea.Model {
+    return NewButtonModel()
+})
+```
+
+#### `Group(name string, register func())`
+
+Creates a collapsible folder to organize related components.
+
+**Parameters:**
+- `name` - Display name for the group/folder
+- `register` - Callback function where you register components or nested groups
+
+**Example:**
+```go
+bubblebook.Group("Forms", func() {
+    bubblebook.Register("Input", func() tea.Model {
+        return NewInputModel()
+    })
+    bubblebook.Register("Button", func() tea.Model {
+        return NewButtonModel()
+    })
+})
+```
+
+Groups can be nested to any depth for hierarchical organization.
+
 #### `Start()`
 
-Launches the bubblebook TUI with all registered components.
+Launches the bubblebook TUI with all registered components and groups.
 
 ### Types
 
@@ -133,13 +237,15 @@ go run main.go
 
 ## Features
 
-- Component isolation - Run and inspect individual Bubble Tea components
-- Pure Bubbletea - Built entirely with Bubbletea, no framework mixing
-- Full styling support - Components render with all colors, styles, and ANSI sequences
-- Interactive preview - Navigate between components and interact with them in real-time
-- Keyboard navigation - Vim-style navigation and intuitive keyboard shortcuts
-- Built-in help - Press `?` to see all keyboard shortcuts
-- Zero-config - Plug and play with minimal setup
+- **Component isolation** - Run and inspect individual Bubble Tea components
+- **Folder organization** - Group related components with collapsible folders
+- **Pure Bubbletea** - Built entirely with Bubbletea, no framework mixing
+- **Full styling support** - Components render with all colors, styles, and ANSI sequences
+- **Interactive preview** - Navigate between components and interact with them in real-time
+- **Keyboard navigation** - Vim-style navigation and intuitive keyboard shortcuts
+- **Nested groups** - Organize components hierarchically with unlimited nesting depth
+- **Built-in help** - Press `?` to see all keyboard shortcuts
+- **Zero-config** - Plug and play with minimal setup
 
 ## Use Cases
 
@@ -159,6 +265,7 @@ Just like [Storybook](https://storybook.js.org/) helps frontend developers build
 - [x] Pure Bubbletea implementation
 - [x] Keyboard navigation and focus management
 - [x] Built-in help screen
+- [x] Folder/group organization with collapsible UI
 - [ ] Dynamic props via "knobs" (labels, booleans, enums)
 - [ ] Live reload on source file change
 - [ ] Theming support

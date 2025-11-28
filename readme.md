@@ -9,7 +9,11 @@
 ## ✨ Features
 
 * 📦 **Component isolation** – Run and inspect individual Bubble Tea components
-* 🎛️ **Dynamic knobs** – Modify component props/state on the fly and see results instantly
+* 🎨 **Pure Bubbletea** – Built entirely with Bubbletea, no framework mixing
+* 🌈 **Full styling support** – Components render with all colors, styles, and ANSI sequences
+* 🎛️ **Interactive preview** – Navigate between components and interact with them in real-time
+* ⌨️ **Keyboard navigation** – Vim-style navigation (j/k) and intuitive keyboard shortcuts
+* ❓ **Built-in help** – Press `?` to see all keyboard shortcuts
 * 🖼️ **Live preview** – View component output as you develop
 * 🚀 **Zero-config** – Plug and play with minimal setup
 * 🧪 **Visual testing** – Great for building a visual testing pipeline for TUIs
@@ -35,6 +39,15 @@ bubblebook
 ```
 
 This will automatically discover your exported Bubble Tea components (more details on structure below) and launch the interface.
+
+### Keyboard Shortcuts
+
+* **↑/k, ↓/j** – Navigate component list
+* **g, G** – Jump to top/bottom
+* **tab** – Switch between list and preview
+* **esc** – Return to component list
+* **?** – Toggle help screen
+* **q, ctrl+c** – Quit
 
 ---
 
@@ -83,8 +96,11 @@ Just like [Storybook](https://storybook.js.org/) does for frontend React/Vue/Sve
 
 ## 🛣️ Roadmap
 
-* [ ] Create interface to .Add Datastructures which will Contain the actual component and the knobs and how to put which knob to which param
-* [ ] Register & render simple Bubble Tea models
+* [x] Register & render simple Bubble Tea models
+* [x] Pure Bubbletea implementation (no framework mixing)
+* [x] Keyboard navigation and focus management
+* [x] Built-in help screen
+* [ ] Create interface to add datastructures which will contain the actual component and the knobs
 * [ ] Add dynamic props via "knobs" (e.g., labels, booleans, enums)
 * [ ] Live reload on source file change
 * [ ] Integration with popular Go build tools

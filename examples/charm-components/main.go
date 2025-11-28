@@ -8,20 +8,33 @@ import (
 )
 
 func main() {
-	bubblebook.Register("Spinner", func() tea.Model {
-		return models.NewSpinnerModel()
+	// Input components group
+	bubblebook.Group("Input", func() {
+		bubblebook.Register("Text Input", func() tea.Model {
+			return models.NewTextInputModel()
+		})
 	})
 
-	bubblebook.Register("Progress Bar", func() tea.Model {
-		return models.NewProgressModel()
+	// Data display group
+	bubblebook.Group("Data Display", func() {
+		bubblebook.Register("List", func() tea.Model {
+			return models.NewListModel()
+		})
 	})
 
-	bubblebook.Register("Text Input", func() tea.Model {
-		return models.NewTextInputModel()
-	})
+	// Feedback group with nested groups
+	bubblebook.Group("Feedback", func() {
+		bubblebook.Group("Progress", func() {
+			bubblebook.Register("Progress Bar", func() tea.Model {
+				return models.NewProgressModel()
+			})
+		})
 
-	bubblebook.Register("List", func() tea.Model {
-		return models.NewListModel()
+		bubblebook.Group("Loading", func() {
+			bubblebook.Register("Spinner", func() tea.Model {
+				return models.NewSpinnerModel()
+			})
+		})
 	})
 
 	bubblebook.Start()

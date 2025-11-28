@@ -33,11 +33,28 @@ var (
 
 	cursorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("205"))
+
+	groupItemStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("75")).
+			Bold(true)
+
+	selectedGroupItemStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("205")).
+				Bold(true)
+
+	folderOpenStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("220"))
+
+	folderClosedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("246"))
+
+	componentIconStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("246"))
 )
 
 // ComponentListModel handles the component list sidebar
 type ComponentListModel struct {
-	components    []ComponentEntry
+	entries       []Entry
 	selectedIndex int
 	width         int
 	height        int
@@ -46,9 +63,9 @@ type ComponentListModel struct {
 }
 
 // NewComponentListModel creates a new component list model
-func NewComponentListModel(components []ComponentEntry) *ComponentListModel {
+func NewComponentListModel(entries []Entry) *ComponentListModel {
 	return &ComponentListModel{
-		components:    components,
+		entries:       entries,
 		selectedIndex: 0,
 		focused:       true,
 		scrollOffset:  0,
@@ -73,6 +90,8 @@ func (m *ComponentListModel) SelectedIndex() int {
 
 // Update handles messages
 func (m ComponentListModel) Update(msg tea.Msg) (ComponentListModel, tea.Cmd) {
+	visibleCount := CountVisibleEntries(m.entries)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -82,7 +101,7 @@ func (m ComponentListModel) Update(msg tea.Msg) (ComponentListModel, tea.Cmd) {
 				m.ensureVisible()
 			}
 		case "down", "j":
-			if m.selectedIndex < len(m.components)-1 {
+			if m.selectedIndex < visibleCount-1 {
 				m.selectedIndex++
 				m.ensureVisible()
 			}
@@ -92,14 +111,41 @@ func (m ComponentListModel) Update(msg tea.Msg) (ComponentListModel, tea.Cmd) {
 			m.scrollOffset = 0
 		case "G":
 			// Go to bottom
-			m.selectedIndex = len(m.components) - 1
+			m.selectedIndex = visibleCount - 1
 			m.ensureVisible()
 		case "home":
 			m.selectedIndex = 0
 			m.scrollOffset = 0
 		case "end":
-			m.selectedIndex = len(m.components) - 1
+			m.selectedIndex = visibleCount - 1
 			m.ensureVisible()
+		case "enter", "right", "l":
+			// Toggle group expansion or select component
+			flattened := FlattenEntries(m.entries, 0)
+			if m.selectedIndex >= 0 && m.selectedIndex < len(flattened) {
+				entry := flattened[m.selectedIndex]
+				if entry.Type == EntryTypeGroup {
+					// Toggle group
+					m.entries = ToggleGroup(m.entries, m.selectedIndex)
+				}
+			}
+		case "left", "h":
+			// Collapse group if current item is a group, or jump to parent
+			flattened := FlattenEntries(m.entries, 0)
+			if m.selectedIndex >= 0 && m.selectedIndex < len(flattened) {
+				entry := flattened[m.selectedIndex]
+				if entry.Type == EntryTypeGroup && entry.Expanded {
+					// Collapse the group
+					m.entries = ToggleGroup(m.entries, m.selectedIndex)
+				} else if entry.Level > 0 {
+					// Jump to parent group
+					parentIndex := FindParentGroup(m.entries, m.selectedIndex)
+					if parentIndex >= 0 {
+						m.selectedIndex = parentIndex
+						m.ensureVisible()
+					}
+				}
+			}
 		}
 	}
 
@@ -130,6 +176,9 @@ func (m ComponentListModel) View() string {
 	b.WriteString(title)
 	b.WriteString("\n\n")
 
+	// Flatten entries for rendering
+	flattened := FlattenEntries(m.entries, 0)
+
 	// Calculate visible range
 	visibleLines := m.height - 4 // Account for border, title, and padding
 	if visibleLines < 1 {
@@ -138,22 +187,42 @@ func (m ComponentListModel) View() string {
 
 	startIdx := m.scrollOffset
 	endIdx := m.scrollOffset + visibleLines
-	if endIdx > len(m.components) {
-		endIdx = len(m.components)
+	if endIdx > len(flattened) {
+		endIdx = len(flattened)
 	}
 
 	// Render items
 	for i := startIdx; i < endIdx; i++ {
-		component := m.components[i]
+		entry := flattened[i]
+
+		// Calculate indentation based on level
+		indent := strings.Repeat("  ", entry.Level)
+
 		cursor := "  "
 		style := normalItemStyle
+		icon := ""
 
 		if i == m.selectedIndex {
 			cursor = cursorStyle.Render("▶ ")
 			style = selectedItemStyle
 		}
 
-		line := cursor + style.Render(component.Name)
+		if entry.Type == EntryTypeGroup {
+			// Folder icon
+			if entry.Expanded {
+				icon = folderOpenStyle.Render("📂 ")
+			} else {
+				icon = folderClosedStyle.Render("📁 ")
+			}
+			style = groupItemStyle
+			if i == m.selectedIndex {
+				style = selectedGroupItemStyle
+			}
+		} else {
+			icon = componentIconStyle.Render("• ")
+		}
+
+		line := cursor + indent + icon + style.Render(entry.Name)
 		b.WriteString(line)
 		b.WriteString("\n")
 	}
@@ -163,7 +232,7 @@ func (m ComponentListModel) View() string {
 		// Can scroll up
 		b.WriteString("\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("  ▲ more"))
 	}
-	if endIdx < len(m.components) {
+	if endIdx < len(flattened) {
 		// Can scroll down
 		b.WriteString("\n" + lipgloss.NewStyle().Foreground(lipgloss.Color("241")).Render("  ▼ more"))
 	}

@@ -52,6 +52,16 @@ func RenderHelp(width, height int) string {
 	b.WriteString(helpDescStyle.Render("Select component"))
 	b.WriteString("\n")
 
+	// Folder navigation section
+	b.WriteString(helpSectionStyle.Render("Folders"))
+	b.WriteString("\n")
+	b.WriteString(helpKeyStyle.Render("  →/l/enter "))
+	b.WriteString(helpDescStyle.Render("Expand folder"))
+	b.WriteString("\n")
+	b.WriteString(helpKeyStyle.Render("  ←/h       "))
+	b.WriteString(helpDescStyle.Render("Collapse folder / Jump to parent"))
+	b.WriteString("\n")
+
 	// Focus section
 	b.WriteString(helpSectionStyle.Render("Focus"))
 	b.WriteString("\n")

@@ -29,7 +29,7 @@ type BubblebookModel struct {
 	sidebarWidth int
 
 	// State
-	components    []ComponentEntry
+	entries       []Entry
 	selectedIndex int
 	focusedPane   Pane
 	showHelp      bool
@@ -40,13 +40,13 @@ type BubblebookModel struct {
 }
 
 // NewBubblebookModel creates a new instance of the main application model
-func NewBubblebookModel(components []ComponentEntry) BubblebookModel {
+func NewBubblebookModel(entries []Entry) BubblebookModel {
 	return BubblebookModel{
 		sidebarWidth:  30,
-		components:    components,
+		entries:       entries,
 		selectedIndex: 0,
 		focusedPane:   PaneList,
-		componentList: NewComponentListModel(components),
+		componentList: NewComponentListModel(entries),
 		preview:       NewPreviewModel(),
 	}
 }
@@ -54,7 +54,7 @@ func NewBubblebookModel(components []ComponentEntry) BubblebookModel {
 // Init initializes the model
 func (m BubblebookModel) Init() tea.Cmd {
 	// Load the first component if available
-	if len(m.components) > 0 {
+	if CountVisibleEntries(m.entries) > 0 {
 		return m.loadComponent(0)
 	}
 	return nil
@@ -195,13 +195,13 @@ func (m BubblebookModel) View() string {
 
 // loadComponent loads a component by index
 func (m BubblebookModel) loadComponent(index int) tea.Cmd {
-	if index < 0 || index >= len(m.components) {
+	factory, name, ok := FindComponentByIndex(m.entries, index)
+	if !ok {
 		return nil
 	}
 
-	entry := m.components[index]
-	component := entry.Factory()
+	component := factory()
 
 	// Set the component in the preview
-	return m.preview.LoadComponent(component, entry.Name)
+	return m.preview.LoadComponent(component, name)
 }
